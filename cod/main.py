@@ -4,6 +4,7 @@ from tensorflow.keras.preprocessing import image
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+import os
 
 dataPath = "../dataset/n"
 
@@ -66,13 +67,81 @@ print(f'Acurácia do modelo: {accuracy * 100:.2f}%')
 
 
 
-img_path = '../add.png'
-img = image.load_img(img_path, target_size=(28, 28))
-img_array = image.img_to_array(img)
-img_array = np.expand_dims(img_array, axis=0)  
-img_array /= 255.0  
+img_dir = '../test/'
+
+# caminho das imagens
+img_paths = [os.path.join(img_dir, img_name) for img_name in os.listdir(img_dir)] 
 
 
-prediction = model.predict(img_array)
-predicted_class = np.argmax(prediction)  
-print(f'O modelo previu o dígito: {predicted_class}')
+#array para guardar valores preditos 
+predictions = []
+
+#carregar e prever valores da imagens
+for img_path in img_paths:
+  
+    img = image.load_img(img_path, target_size=(28, 28))
+    
+  
+    img_array = image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)  
+    img_array /= 255.0 
+
+   
+    prediction = model.predict(img_array)
+    
+   
+    predicted_class = np.argmax(prediction)
+    
+   
+    predictions.append(predicted_class)
+
+
+
+for i, img_path in enumerate(img_paths):
+    print(f"Imagem: {img_path}, Classe prevista: {predictions[i]}")
+
+
+
+
+n = -1
+i = 0
+n1 = ''
+n2 = ''
+
+#loop para pegar dígitos até chegar no símbolo de operação
+while n <=10:
+    n1 = n1 + str(predictions[i])
+    n = predictions[i+1]
+    i +=1
+
+
+i +=1
+#loop para pegar dígitos depois do símbolo de operação
+for j in range(i, len(predictions)):  
+    n2 += str(predictions[j])
+    if predictions[j] >= 10:
+        n = -1  
+        break 
+
+
+n1 = int(n1)
+n2 = int(n2)
+op = n
+
+
+
+#dictionary para definir operação a ser feita 
+operations = {
+    10: lambda a, b: a + b,
+    11: lambda a, b: a / b if b != 0 else "Divisão por zero",
+    12: lambda a, b: a == b,
+    13: lambda a, b: a * b,
+    14: lambda a, b: a - b
+}
+   
+n3 = operations.get(op, lambda a, b: "Operação inválida")(n1, n2)
+
+
+print(f'resultado: {n3}' )
+
+
